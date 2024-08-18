@@ -25,7 +25,13 @@ def get_name(*args):
 # Функция для обработки текстовых сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
-    logger1.info("От %s  получено сообщение:  ---  %s  ", get_name(update.message.chat.username, update.message.chat.first_name, update.message.chat.last_name), update.message.text)
+    logger1.info("От %s  получено сообщение:  ---  %s  ", 
+                 get_name(
+                     update.message.chat.username, 
+                     update.message.chat.first_name, 
+                     update.message.chat.last_name), 
+                     update.message.text
+                     )
     logger2.debug("что в объекте"+str(update))
     user_message = update.message.text
     response = get_response(user_message)
@@ -35,7 +41,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 def get_chatgpt_response_with_context(question: str) -> str:
     global context_memory
     context_memory.append({"role": "user", "content": question})
-    
+    add_responce_to_data_file(f'Вопрос:{question}')
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -44,6 +50,7 @@ def get_chatgpt_response_with_context(question: str) -> str:
         )
         answer = response['choices'][0]['message']['content'].strip()
         context_memory.append({"role": "assistant", "content": answer})
+        add_responce_to_data_file(f'Ответ:{answer} \n')
         return answer
     
     except openai.error.OpenAIError as e:

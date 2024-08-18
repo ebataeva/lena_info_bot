@@ -1,3 +1,5 @@
+from datetime import datetime
+
 
 # Функция для загрузки контекста из файла
 def load_context_from_file():
@@ -26,3 +28,8 @@ def search_in_file(question: str) -> str:
             response = line.replace("Ответ:", "").strip()
             break
     return response
+
+def add_responce_to_data_file(chat_context):
+    with open(f'data.txt', 'a', encoding='utf-8') as file:
+        file.write(chat_context+ '\n') 
+       
