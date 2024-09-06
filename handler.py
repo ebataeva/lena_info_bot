@@ -1,6 +1,8 @@
 from logger import logger1, logger2
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    Application, CommandHandler, MessageHandler, filters, ContextTypes
+    )
 import openai
 from dotenv import load_dotenv
 import os
@@ -16,14 +18,18 @@ context_memory = []
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     logger1.info("Команда /start получена")
-    await update.message.reply_text('Приветик! Отправьте мне вопрос, и я постараюсь найти ответ.')
+    await update.message.reply_text(
+        'Приветик! Отправьте мне вопрос, и я постараюсь найти ответ'
+        )
 
 def get_name(*args):
     name = ' '.join(args)
     return name.upper()
 
 # Функция для обработки текстовых сообщений
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_message(
+        update: Update, context: ContextTypes.DEFAULT_TYPE
+        ) -> None:
     
     logger1.info("От %s  получено сообщение:  ---  %s  ", 
                  get_name(

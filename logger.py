@@ -63,5 +63,10 @@ class Logger2():
          return self.logger
 
 
-logger2 = Logger2('%(levelname)s',__name__,  '%(funcName)s', '%(asctime)s', '%(message)s',).get_logger()
+logger2 = Logger2(
+    '%(levelname)s',__name__,  
+    '%(funcName)s', 
+    '%(asctime)s', 
+    '%(message)s',
+    ).get_logger()
 
