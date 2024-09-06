@@ -1,5 +1,6 @@
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import (
+    Application, CommandHandler, MessageHandler, filters, ContextTypes)
 import openai
 from dotenv import load_dotenv
 import os
@@ -10,12 +11,12 @@ from handler import *
 # Загрузка переменных окружения из файла .env
 load_dotenv()
 
-# Вставьте сюда ваш токен Telegram-бота и API-ключ OpenAI из переменных окружения
+# Вставьте сюда токен Telegram-бота и API-ключ OpenAI из переменных окружения
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 # Настройка OpenAI
-openai.api_key = OPENAI_API_KEY
+openai.api_key = OPENAI_API_KEY 
 
 def main() -> None:
     # Загрузка контекста из файла
@@ -28,7 +29,9 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
 
     # Регистрируем обработчик текстовых сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, handle_message)
+        )
 
     # Запускаем бота
     application.run_polling()

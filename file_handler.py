@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 # Функция для загрузки контекста из файла
-def load_context_from_file():
+def load_context_from_file() -> None:
     global context_memory
     context_memory = []
     with open('data.txt', 'r', encoding='utf-8') as file:
@@ -10,9 +10,15 @@ def load_context_from_file():
     
     for line in lines:
         if line.startswith("Вопрос:"):
-            context_memory.append({"role": "user", "content": line.replace("Вопрос:", "").strip()})
+            context_memory.append({
+                "role": "user", 
+                "content": line.replace("Вопрос:", "").strip()
+                })
         elif line.startswith("Ответ:"):
-            context_memory.append({"role": "assistant", "content": line.replace("Ответ:", "").strip()})
+            context_memory.append({
+                "role": "assistant", 
+                "content": line.replace("Ответ:", "").strip()
+                })
 
 # Функция для поиска ответа в текстовом файле
 def search_in_file(question: str) -> str:
@@ -29,7 +35,7 @@ def search_in_file(question: str) -> str:
             break
     return response
 
-def add_responce_to_data_file(chat_context):
+def add_responce_to_data_file(chat_context) -> None:
     with open(f'data.txt', 'a', encoding='utf-8') as file:
         file.write(chat_context+ '\n') 
        
