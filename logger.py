@@ -13,8 +13,12 @@ class Logger:
         console_handler = logging.StreamHandler()
 
         # Разные форматтеры для разных логгеров
-        if logger_name == 'FileHandlerLogger':
+        if logger_name == 'ChatBotLogger':
+            formatter = logging.Formatter(f"{Fore.BLUE}%(asctime)s - %(name)s - %(levelname)s - %(message)s{Style.RESET_ALL}")
+        elif logger_name == 'FileHandlerLogger':
             formatter = logging.Formatter(f"{Fore.GREEN}%(asctime)s - %(name)s - %(levelname)s - %(message)s{Style.RESET_ALL}")
+        elif logger_name == 'QuestionAnswerBaseLogger':
+            formatter = logging.Formatter(f"{Fore.YELLOW}%(asctime)s - %(name)s - %(levelname)s - %(message)s{Style.RESET_ALL}")    
         else:
             formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 

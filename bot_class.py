@@ -4,9 +4,10 @@ from handler import load_user_context, save_user_context
 import openai
 from logger import Logger
 from api_handler import get_openai_response, preprocess_prompt
-from file_handler import search_approximate_answer  # Импортируем функцию
+from question_answer_base import QuestionAnswerBase
 
 logger = Logger('ChatBotLogger').get_logger()
+qa_base = QuestionAnswerBase(file_path='data.txt')
 
 class ChatBot:
     def __init__(self, telegram_token: str, openai_key: str):
@@ -69,7 +70,7 @@ class ChatBot:
             context_memory.append({"role": "user", "content": user_message})
 
             # Попытка найти похожий вопрос в локальном файле
-            response = search_approximate_answer(user_message, file_path='data.txt')
+            response = qa_base.search_approximate_answer(user_message)
             found_in_file = False  # Флаг для отслеживания источника ответа
 
             if response:

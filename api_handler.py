@@ -33,7 +33,7 @@ def get_openai_response(context_memory):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
-            max_tokens=300,  # Увеличиваем количество токенов для более длинных ответов
+            max_tokens=600,  # Увеличиваем количество токенов для более длинных ответов
             temperature=0.7,  # Контролируем креативность и разнообразие ответов
             top_p=0.9  # Используем вероятностное отсечение слов для генерации более естественных ответов
         )
