@@ -1,81 +1,74 @@
-from logger import logger1, logger2
-from telegram import Update
-from telegram.ext import (
-    Application, CommandHandler, MessageHandler, filters, ContextTypes
-    )
-import openai
-from dotenv import load_dotenv
 import os
-from file_handler import *
+from typing import List, Dict
+from telegram import Update
+from telegram.ext import ContextTypes
+from file_handler import load_context_from_file, save_context_to_file, search_in_file
+from api_handler import get_openai_response
+from logger import Logger
 
+logger = Logger('HandlerLogger').get_logger()
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+def load_user_context(user_name: str, chat_id: int) -> List[Dict[str, str]]:
+    file_path = f'context_{user_name}_{chat_id}.txt'
+    return load_context_from_file(file_path)
 
-# Глобальная переменная для хранения контекста
-context_memory = []
+def save_user_context(user_name: str, chat_id: int, context_memory: List[Dict[str, str]]):
+    file_path = f'context_{user_name}_{chat_id}.txt'
+    save_context_to_file(context_memory, file_path)
 
-# Функция для обработки команды /start
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    
-    logger1.info("Команда /start получена")
-    await update.message.reply_text(
-        'Приветик! Отправьте мне вопрос, и я постараюсь найти ответ'
-        )
-
-def get_name(*args):
-    name = ' '.join(args)
-    return name.upper()
+# Обработчик команды /start
+async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_name = (update.message.chat.username or update.message.chat.first_name or 'unknown_user').strip()
+    try:
+        logger.info("Команда /start получена")
+        chat_id = update.message.chat_id
+        context.user_data['context_memory'] = load_user_context(user_name or 'unknown_user', chat_id)
+        await update.message.reply_text('Приветик! Отправьте мне вопрос, и я постараюсь найти ответ')
+    except Exception as e:
+        logger.error(f"Ошибка в обработчике /start: {e}")
 
 # Функция для обработки текстовых сообщений
-async def handle_message(
-        update: Update, context: ContextTypes.DEFAULT_TYPE
-        ) -> None:
-    
-    logger1.info("От %s  получено сообщение:  ---  %s  ", 
-                 get_name(
-                     update.message.chat.username, 
-                     update.message.chat.first_name, 
-                     update.message.chat.last_name), 
-                     update.message.text
-                     )
-    logger2.debug("что в объекте"+str(update))
-    user_message = update.message.text
-    response = get_response(user_message)
-    await update.message.reply_text(response)
-
-# Функция для получения ответа от ChatGPT с использованием контекста
-def get_chatgpt_response_with_context(question: str) -> str:
-    global context_memory
-    context_memory.append({"role": "user", "content": question})
-    add_responce_to_data_file(f'Вопрос:{question}')
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=context_memory,
-            max_tokens=150
-        )
-        answer = response['choices'][0]['message']['content'].strip()
-        context_memory.append({"role": "assistant", "content": answer})
-        add_responce_to_data_file(f'Ответ:{answer} \n')
-        return answer
-    
-    except openai.error.OpenAIError as e:
-        logger1.error(f"OpenAI API error: {e}")
-        return "Извините, произошла ошибка при обращении к OpenAI API."
+        user_message = update.message.text
+        user_name = update.message.chat.first_name or "Неизвестный пользователь"
+        chat_id = update.message.chat_id
+        logger.info(f"От {user_name} ({chat_id}) получено сообщение: --- {user_message}")
 
-# Функция для получения ответа
-def get_response(question: str) -> str:
-    
-    # Сначала ищем ответ в файле
-    response = search_in_file(question)
-    if response:
-        logger2.info("Такой ответ я выдал: %s", response)
-        logger2.debug("контекст"+str(context_memory))
-        return response
+        # Загружаем контекст пользователя
+        if 'context_memory' not in context.user_data:
+            context.user_data['context_memory'] = load_user_context(user_name or 'unknown_user', chat_id)
 
-    # Если не найдено, обращаемся к ChatGPT с контекстом
-    response = get_chatgpt_response_with_context(question)
-    logger1.info("Такой ответ я выда из гпт: %s", response)
-    logger1.debug("контекст"+str(context_memory))
-    answ = f'мне надо походу в дебри лезть'
-    return response
+        # Получаем текущий контекст пользователя
+        context_memory = context.user_data['context_memory']
+
+        # Сохраняем вопрос пользователя в контексте
+        context_memory.append({"role": "user", "content": user_message})
+        logger.info("Вопрос добавлен в контекст.")
+
+        # Поиск ответа в контексте
+        response = search_in_file(user_message, context_memory)
+
+        if response:
+            logger.info("Ответ найден в контексте.")
+        else:
+            logger.info("Ответ не найден в контексте, запрос к OpenAI...")
+            response = get_openai_response(user_message)
+            logger.info(f"Ответ получен от OpenAI: {response}")
+
+        # Проверяем, получили ли мы ответ
+        if response:
+            # Сохраняем ответ бота в контексте
+            context_memory.append({"role": "assistant", "content": response})
+            logger.info("Ответ добавлен в контекст.")
+            
+            # Сохраняем вопрос и ответ в файл
+            save_user_context(user_name or 'unknown_user', chat_id, context_memory)
+            logger.info(f"Контекст для пользователя {chat_id} сохранен в файл.")
+            
+            await update.message.reply_text(response)
+        else:
+            logger.error("Не удалось получить ответ от OpenAI или контекста.")
+    except Exception as e:
+        logger.error(f"Ошибка в обработчике текстового сообщения: {e}")
+        await update.message.reply_text("Произошла ошибка при обработке вашего сообщения.")
