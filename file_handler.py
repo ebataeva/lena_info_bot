@@ -90,9 +90,10 @@ def search_in_file(question: str, context_memory: List[Dict[str, str]]) -> str:
 
     return response
 
-# Функция для поиска приблизительного ответа в файле Data.txt
-def search_approximate_answer(question: str, file_path: str = 'Data.txt') -> str:
+# Функция для поиска приблизительного ответа в файле data.txt
+def search_approximate_answer(question: str, file_path: str = 'data.txt') -> str:
     try:
+        logger.info(f"Поиск ответа в файле '{file_path}' для вопроса: {question}")
         with open(file_path, 'r', encoding='utf-8') as file:
             lines = file.readlines()
 
@@ -104,8 +105,10 @@ def search_approximate_answer(question: str, file_path: str = 'Data.txt') -> str
         for line in lines:
             if line.startswith("Вопрос:"):
                 current_question = line.replace("Вопрос:", "").strip()
+                logger.info(f"Найден вопрос: '{current_question}'")
             elif line.startswith("Ответ:") and current_question:
                 current_answer = line.replace("Ответ:", "").strip()
+                logger.info(f"Найден ответ: '{current_answer}'")
                 questions_answers.append((current_question, current_answer))
                 current_question = None
 
@@ -113,15 +116,27 @@ def search_approximate_answer(question: str, file_path: str = 'Data.txt') -> str
         best_match = None
         best_score = 0.0
         for stored_question, stored_answer in questions_answers:
-            similarity = difflib.SequenceMatcher(None, question.lower(), stored_question.lower()).ratio()
-            if similarity > best_score:
-                best_score = similarity
-                best_match = stored_answer
+            try:
+                # Проверяем, что оба вопроса являются строками и не пустыми
+                if not isinstance(question, str) or not question.strip() or not isinstance(stored_question, str) or not stored_question.strip():
+                    logger.warning(f"Пропущен некорректный вопрос: '{stored_question}'")
+                    continue
+                
+                logger.info(f"Сравнение вопроса: '{question}' с '{stored_question}'")
+                similarity = difflib.SequenceMatcher(None, question.lower(), stored_question.lower()).ratio()
+                logger.info(f"Сравнение с вопросом: '{stored_question}', схожесть: {similarity:.2f}")
+                if similarity > best_score:
+                    best_score = similarity
+                    best_match = stored_answer
+            except Exception as e:
+                logger.error(f"Ошибка при сравнении с вопросом '{stored_question}': {e}")
 
         # Устанавливаем порог схожести (например, 0.6)
-        if best_score >= 0.6:
+        if best_score >= 0.5:
+            logger.info(f"Найден подходящий вопрос с похожестью {best_score:.2f}: возвращаем ответ.")
             return best_match
 
+        logger.info("Похожий вопрос не найден в файле.")
         return None  # Возвращаем None, если нет достаточного совпадения
     except Exception as e:
         logger.error(f"Ошибка при поиске ответа в файле: {e}")

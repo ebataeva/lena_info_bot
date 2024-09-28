@@ -1,10 +1,10 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from handler import load_user_context, save_user_context
-from api_handler import get_openai_response  # Обработчик для API
 import openai
 from logger import Logger
 from api_handler import get_openai_response, preprocess_prompt
+from file_handler import search_approximate_answer  # Импортируем функцию
 
 logger = Logger('ChatBotLogger').get_logger()
 
@@ -52,16 +52,11 @@ class ChatBot:
         except Exception as e:
             logger.error(f"Ошибка при очистке контекста: {e}")
 
-    
-
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
             user_message = update.message.text
             user_name = self.get_user_name(update)
             chat_id = update.message.chat_id
-
-            # Предварительная обработка сообщения пользователя
-            processed_message = preprocess_prompt(user_message)
 
             # Загружаем контекст пользователя, если он еще не загружен
             if 'context_memory' not in context.user_data:
@@ -70,11 +65,21 @@ class ChatBot:
             # Получаем текущий контекст пользователя
             context_memory = context.user_data['context_memory']
 
-            # Добавляем обработанный вопрос пользователя в контекст
-            context_memory.append({"role": "user", "content": processed_message})
+            # Добавляем оригинальный вопрос пользователя в контекст
+            context_memory.append({"role": "user", "content": user_message})
 
-            # Генерация ответа от OpenAI
-            response = get_openai_response(context_memory)
+            # Попытка найти похожий вопрос в локальном файле
+            response = search_approximate_answer(user_message, file_path='data.txt')
+            found_in_file = False  # Флаг для отслеживания источника ответа
+
+            if response:
+                logger.info("Ответ найден в локальном файле.")
+                found_in_file = True
+            else:
+                # Если ответ не найден в локальном файле, обрабатываем сообщение и обращаемся к OpenAI
+                processed_message = preprocess_prompt(user_message)
+                context_memory[-1]["content"] = processed_message  # Обновляем последний вопрос в контексте
+                response = get_openai_response(context_memory)
 
             if response:
                 # Добавляем ответ в контекст
@@ -87,7 +92,13 @@ class ChatBot:
                 await update.message.reply_text(response)
             else:
                 await update.message.reply_text("Не удалось получить ответ.")
+
+            # Логирование источника ответа
+            if found_in_file:
+                logger.info(f"Ответ для '{user_message}' взят из локального файла.")
+            else:
+                logger.info(f"Ответ для '{user_message}' сгенерирован OpenAI.")
+                
         except Exception as e:
             logger.error(f"Ошибка в обработчике сообщений: {e}")
             await update.message.reply_text("Произошла ошибка при обработке вашего сообщения.")
-
