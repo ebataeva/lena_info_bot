@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
-from logger import Logger
+from handlers.logger import Logger
 
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 

@@ -1,5 +1,5 @@
 import openai
-from logger import Logger
+from handlers.logger import Logger
 
 logger = Logger('APIHandlerLogger').get_logger()
 

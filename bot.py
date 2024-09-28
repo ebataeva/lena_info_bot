@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
-from bot_class import ChatBot
-from logger import Logger
+from classes.bot_class import ChatBot
+from handlers.logger import Logger
 
 # Создаем логгер для главного файла
 logger = Logger('MainLogger').get_logger()

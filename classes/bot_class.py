@@ -1,10 +1,10 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from handler import load_user_context, save_user_context
+from handlers.handler import load_user_context, save_user_context
 import openai
-from logger import Logger
-from api_handler import get_openai_response, preprocess_prompt
-from question_answer_base import QuestionAnswerBase
+from handlers.logger import Logger
+from handlers.api_handler import get_openai_response, preprocess_prompt
+from classes.question_answer_base import QuestionAnswerBase
 
 logger = Logger('ChatBotLogger').get_logger()
 qa_base = QuestionAnswerBase(file_path='data.txt')
@@ -42,7 +42,7 @@ class ChatBot:
         try:
             user_name = self.get_user_name(update)
             chat_id = update.message.chat_id
-            file_path = f'context_{user_name}_{chat_id}.txt'
+            file_path = f'contexts/context_{user_name}_{chat_id}.txt'
 
             # Очистка контекста
             with open(file_path, 'w', encoding='utf-8') as file:

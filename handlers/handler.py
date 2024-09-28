@@ -2,18 +2,18 @@ import os
 from typing import List, Dict
 from telegram import Update
 from telegram.ext import ContextTypes
-from file_handler import load_context_from_file, save_context_to_file, search_in_file
-from api_handler import get_openai_response
-from logger import Logger
+from handlers.file_handler import load_context_from_file, save_context_to_file, search_in_file
+from handlers.api_handler import get_openai_response
+from handlers.logger import Logger
 
 logger = Logger('HandlerLogger').get_logger()
 
 def load_user_context(user_name: str, chat_id: int) -> List[Dict[str, str]]:
-    file_path = f'context_{user_name}_{chat_id}.txt'
+    file_path = f'contexts/context_{user_name}_{chat_id}.txt'
     return load_context_from_file(file_path)
 
 def save_user_context(user_name: str, chat_id: int, context_memory: List[Dict[str, str]]):
-    file_path = f'context_{user_name}_{chat_id}.txt'
+    file_path = f'contexts/context_{user_name}_{chat_id}.txt'
     save_context_to_file(context_memory, file_path)
 
 # Обработчик команды /start
