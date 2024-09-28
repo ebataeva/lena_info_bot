@@ -52,7 +52,7 @@ class QuestionAnswerBase:
             best_score = 1 - distances[0][0]  # Преобразуем косинусное расстояние в схожесть
 
             # Устанавливаем порог схожести
-            if best_score >= 0.5:
+            if best_score >= 0.8:
                 best_match_answer = self.questions_answers[best_match_index][1]
                 logger.info(f"Найден ответ с похожестью {best_score:.2f}: {best_match_answer}")
                 return best_match_answer

@@ -6,7 +6,7 @@ logger = Logger('APIHandlerLogger').get_logger()
 # Предварительная обработка вопроса для добавления контекста
 def preprocess_prompt(prompt: str) -> str:
     # Если ключевых слов нет, добавим общий контекст
-    return f"{prompt}. Ответьте в контексте блокчейна и криптовалют."
+    return f"{prompt}. Ответьте в контексте блокчейна и криптовалют на языке, на котором задают вопрос."
 
 def get_openai_response(context_memory):
     try:
