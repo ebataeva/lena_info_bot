@@ -3,6 +3,25 @@ from handlers.logger import Logger
 
 logger = Logger('APIHandlerLogger').get_logger()
 
+def send_to_openai(prompt, model="gpt-3.5-turbo"):
+    try:
+        # Используем chat-комплит endpoint
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are an assistant knowledgeable in blockchain and cryptocurrency."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=550,
+            temperature=0.7,
+        )
+        
+        # Извлекаем и возвращаем текст ответа
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        logger.error(f"Ошибка при запросе к OpenAI: {e}")
+        return None
+    
 # Предварительная обработка вопроса для добавления контекста
 def preprocess_prompt(prompt: str) -> str:
     # Если ключевых слов нет, добавим общий контекст

@@ -1,64 +1,73 @@
+from handlers.file_handler import load_text_from_word
+from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
-from handlers.logger import Logger
+import os
+import logging
+import openai
 
-logger = Logger('QuestionAnswerBaseLogger').get_logger()
+logger = logging.getLogger('QuestionAnswerBaseLogger')
 
 class QuestionAnswerBase:
-    def __init__(self, file_path='data.txt'):
-        self.file_path = file_path
-        self.questions_answers = []
-        self.vectorizer = TfidfVectorizer()  # Создаем объект для векторизации текста
-        self.model = None
-        self.load_data()  # Загружаем вопросы и ответы из файла
+    def __init__(self, openai_api_key, word_file_path='documentation.docx'):
+        self.word_file_path = word_file_path
+        self.documentation_text = ""
+        self.documentation_paragraphs = []
+        self.vectorizer = TfidfVectorizer()
+        self.documentation_model = None
+        openai.api_key = openai_api_key
+        self.load_data()  # Загружаем данные из Word-документа
 
     def load_data(self):
-        """Загружает вопросы и ответы из файла и подготавливает модель поиска."""
+        """Загружает текст из Word-документа и подготавливает модель поиска."""
         try:
-            logger.info(f"Загрузка вопросов и ответов из файла '{self.file_path}'")
-            with open(self.file_path, 'r', encoding='utf-8') as file:
-                lines = file.readlines()
+            # Загружаем текст из Word-документа
+            if os.path.exists(self.word_file_path):
+                self.documentation_text = load_text_from_word(self.word_file_path)
+                self.documentation_paragraphs = self.documentation_text.split('\n')  # Разбиваем текст на абзацы
+                logger.info(f"Текст из Word-документа загружен: {len(self.documentation_paragraphs)} абзацев")
 
-            current_question = None
-            current_answer = None
-
-            for line in lines:
-                if line.startswith("Вопрос:"):
-                    current_question = line.replace("Вопрос:", "").strip()
-                elif line.startswith("Ответ:") and current_question:
-                    current_answer = line.replace("Ответ:", "").strip()
-                    self.questions_answers.append((current_question, current_answer))
-                    current_question = None
-
-            # Создаем векторное представление вопросов
-            questions = [q for q, _ in self.questions_answers]
-            X = self.vectorizer.fit_transform(questions)
-
-            # Обучаем модель для поиска ближайших соседей
-            self.model = NearestNeighbors(n_neighbors=1, metric='cosine').fit(X)
-            logger.info("Модель поиска ближайших соседей успешно создана.")
+                # Создаем векторное представление абзацев и обучаем модель
+                if self.documentation_paragraphs:
+                    doc_vectors = self.vectorizer.fit_transform(self.documentation_paragraphs)
+                    self.documentation_model = NearestNeighbors(n_neighbors=1, metric='cosine').fit(doc_vectors)
+                    logger.info("Модель поиска по документации успешно создана.")
+            else:
+                logger.warning(f"Файл '{self.word_file_path}' не найден.")
         except Exception as e:
             logger.error(f"Ошибка при загрузке данных: {e}")
 
-    def search_approximate_answer(self, question):
-        """Ищет наиболее похожий вопрос и возвращает связанный с ним ответ."""
+    def search_in_word_document(self, question):
+        """Ищет наиболее похожий абзац в документации."""
         try:
-            logger.info(f"Поиск ответа для вопроса: {question}")
-            question_vec = self.vectorizer.transform([question])
-            
-            # Находим ближайшего соседа
-            distances, indices = self.model.kneighbors(question_vec)
-            best_match_index = indices[0][0]
-            best_score = 1 - distances[0][0]  # Преобразуем косинусное расстояние в схожесть
-
-            # Устанавливаем порог схожести
-            if best_score >= 0.8:
-                best_match_answer = self.questions_answers[best_match_index][1]
-                logger.info(f"Найден ответ с похожестью {best_score:.2f}: {best_match_answer}")
-                return best_match_answer
-            else:
-                logger.info("Похожий вопрос не найден.")
+            if not self.documentation_paragraphs:
+                logger.warning("Документация отсутствует или пуста.")
                 return None
+
+            # Векторизуем вопрос
+            question_vector = self.vectorizer.transform([question])
+
+            # Поиск в документации
+            distances, indices = self.documentation_model.kneighbors(question_vector)
+            closest_paragraph = self.documentation_paragraphs[indices[0][0]]
+            logger.info(f"Сравнение с абзацем: '{closest_paragraph}', схожесть: {1 - distances[0][0]}")
+
+            # Устанавливаем порог схожести (например, 0.5)
+            if distances[0][0] < 0.5:
+                return closest_paragraph
+
+            # Если не нашли похожий абзац, используем OpenAI
+            logger.info("Похожий абзац не найден, обращаемся к OpenAI.")
+            return self.query_openai(question)
         except Exception as e:
-            logger.error(f"Ошибка при поиске ответа: {e}")
+            logger.error(f"Ошибка при поиске в документации: {e}")
+            return None
+
+    def query_openai(self, question):
+        """Запрашивает OpenAI с учетом документации."""
+        try:
+            prompt = f"Вот текст из документации:\n{self.documentation_text}\n\nВопрос: {question}\nПожалуйста, дайте наилучший ответ, основанный на этом тексте."
+            return send_to_openai(prompt)
+        except Exception as e:
+            logger.error(f"Ошибка при запросе к OpenAI: {e}")
             return None
