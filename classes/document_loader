@@ -1,0 +1,54 @@
+import os
+from PyPDF2 import PdfReader
+from docx import Document
+import pandas as pd
+
+class DocumentLoader:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.supported_formats = ['.txt', '.pdf', '.docx', '.csv', '.xlsx']
+
+    def load_document(self):
+        """Определяет тип файла и загружает текст."""
+        _, file_extension = os.path.splitext(self.file_path)
+        
+        if file_extension not in self.supported_formats:
+            raise ValueError(f"Формат {file_extension} не поддерживается.")
+        
+        if file_extension == '.txt':
+            return self._load_txt()
+        elif file_extension == '.pdf':
+            return self._load_pdf()
+        elif file_extension == '.docx':
+            return self._load_docx()
+        elif file_extension in ['.csv', '.xlsx']:
+            return self._load_spreadsheet()
+
+    def _load_txt(self):
+        """Загружает текст из txt файла."""
+        with open(self.file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+
+    def _load_pdf(self):
+        """Загружает текст из pdf файла."""
+        text = ""
+        with open(self.file_path, 'rb') as file:
+            pdf = PdfReader(file)
+            for page in pdf.pages:
+                text += page.extract_text()
+        return text
+
+    def _load_docx(self):
+        """Загружает текст из docx файла."""
+        doc = Document(self.file_path)
+        return '\n'.join([para.text for para in doc.paragraphs])
+
+    def _load_spreadsheet(self):
+        """Загружает текст из csv или xlsx файла."""
+        if self.file_path.endswith('.csv'):
+            df = pd.read_csv(self.file_path)
+        else:
+            df = pd.read_excel(self.file_path)
+        
+        # Конвертируем содержимое таблицы в строку
+        return df.to_string(index=False)
