@@ -54,6 +54,9 @@ class QuestionAnswerBase:
 
             # Устанавливаем порог схожести (например, 0.5)
             if distances[0][0] < 0.5:
+                if len(closest_paragraph) < 50:
+                    logger.info("Ответ слишком короткий, обращаемся к OpenAI.")
+                    return self.query_openai(question)
                 return closest_paragraph
 
             # Если не нашли похожий абзац, используем OpenAI
