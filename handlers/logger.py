@@ -4,27 +4,34 @@ from colorama import Fore, Style, init
 # Initialize colorama
 init(autoreset=True)
 
-class ColoredFormatter(logging.Formatter):
-    # Маппинг цветов для разных логгеров
-    LOG_COLORS = {
-        'ChatBotLogger': Fore.BLUE,
-        'FileHandlerLogger': Fore.GREEN,
-        'QuestionAnswerBaseLogger': Fore.YELLOW
-    }
+# Словарь с цветами для различных логгеров
+LOG_COLORS = {
+    'ChatBotLogger': Fore.BLUE,
+    'FileHandlerLogger': Fore.GREEN,
+    'QuestionAnswerBaseLogger': Fore.YELLOW,
+    'HandlerLogger': Fore.MAGENTA,
+    'APIHandlerLogger': Fore.CYAN,
+    'MainLogger': Fore.WHITE  # Цвет по умолчанию
+}
 
-    def __init__(self, logger_name, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"):
+# Кастомный форматтер для логирования с цветами
+class ColoredFormatter(logging.Formatter):
+    def __init__(self, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s"):
         super().__init__(fmt)
-        self.logger_name = logger_name
-        self.base_color = self.LOG_COLORS.get(logger_name, Fore.WHITE)
 
     def format(self, record):
-        # Добавляем цвет для ERROR уровня
+        # Получаем базовый цвет логгера или белый по умолчанию
+        log_color = LOG_COLORS.get(record.name, Fore.WHITE)
+
+        # Если уровень логирования - ERROR, устанавливаем красный цвет
         if record.levelno == logging.ERROR:
-            record.msg = f"{Fore.RED}{record.msg}{Style.RESET_ALL}"
-        else:
-            record.msg = f"{self.base_color}{record.msg}{Style.RESET_ALL}"
+            log_color = Fore.RED
+
+        # Форматируем сообщение с цветами
+        record.msg = f"{log_color}{record.msg}{Style.RESET_ALL}"
         return super().format(record)
 
+# Класс Logger для создания логгеров
 class Logger:
     def __init__(self, logger_name: str):
         self.logger = logging.getLogger(logger_name)
@@ -34,7 +41,7 @@ class Logger:
         console_handler = logging.StreamHandler()
         
         # Используем наш кастомный форматтер
-        formatter = ColoredFormatter(logger_name)
+        formatter = ColoredFormatter()
         console_handler.setFormatter(formatter)
 
         # Добавляем обработчик к логгеру
