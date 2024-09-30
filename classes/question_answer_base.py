@@ -3,10 +3,10 @@ from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 import os
-import logging
+from handlers.logger import Logger
 import openai
 
-logger = logging.getLogger('QuestionAnswerBaseLogger')
+logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
     def __init__(self, openai_api_key, word_file_path='documentation.docx'):
