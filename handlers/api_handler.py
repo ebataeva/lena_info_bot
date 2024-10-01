@@ -1,7 +1,12 @@
 import openai
+import os
+from dotenv import load_dotenv
 from handlers.logger import Logger
 
+load_dotenv()
 logger = Logger('APIHandlerLogger').get_logger()
+openai.api_key = os.getenv('OPENAI_API_KEY')
+
 
 def send_to_openai(prompt, model="gpt-3.5-turbo"):
     try:

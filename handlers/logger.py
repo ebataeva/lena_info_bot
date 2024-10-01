@@ -1,5 +1,6 @@
 import logging
 from colorama import Fore, Style, init
+import inspect  # Для получения имени вызываемого метода
 
 # Initialize colorama
 init(autoreset=True)
@@ -27,8 +28,11 @@ class ColoredFormatter(logging.Formatter):
         if record.levelno == logging.ERROR:
             log_color = Fore.RED
 
-        # Форматируем сообщение с цветами
-        record.msg = f"{log_color}{record.msg}{Style.RESET_ALL}"
+        # Получаем имя вызываемого метода
+        current_method = inspect.stack()[8].function
+
+        # Форматируем сообщение с цветами и добавляем имя метода
+        record.msg = f"{log_color}[{current_method}] {record.msg}{Style.RESET_ALL}"
         return super().format(record)
 
 # Класс Logger для создания логгеров

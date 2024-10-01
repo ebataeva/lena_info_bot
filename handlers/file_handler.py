@@ -22,31 +22,6 @@ def load_text_from_word(file_path: str) -> str:
     except Exception as e:
         logger.error(f"Ошибка при загрузке текста из Word-документа: {e}")
         return ""
-    
-def read_questions_and_answers(file_path: str) -> List[Dict[str, str]]:
-    """Читает вопросы и ответы из файла и возвращает их в виде списка словарей."""
-    qa_pairs = []
-    try:
-        logger.info(f"Попытка загрузки вопросов и ответов из файла: {file_path}")
-        if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                lines = file.readlines()
-
-            current_question = None
-
-            for line in lines:
-                if line.startswith("Вопрос:"):
-                    current_question = line.replace("Вопрос:", "").strip()
-                elif line.startswith("Ответ:") and current_question:
-                    current_answer = line.replace("Ответ:", "").strip()
-                    qa_pairs.append((current_question, current_answer))
-                    current_question = None
-
-        logger.info(f"Количество пар вопросов и ответов: {len(qa_pairs)}")
-    except Exception as e:
-        logger.error(f"Ошибка при загрузке вопросов и ответов: {e}")
-
-    return qa_pairs
 
 # Функция для загрузки контекста из файла
 def load_context_from_file(file_path: str) -> List[Dict[str, str]]:
@@ -109,26 +84,3 @@ def save_context_to_file(context_memory: List[Dict[str, str]], file_path: str, m
         logger.info(f"Контекст успешно сохранен в файл: {file_path}")
     except Exception as e:
         logger.error(f"Ошибка при записи в файл: {e}")
-
-
-# Функция для поиска ответа в контексте
-def search_in_file(question: str, context_memory: List[Dict[str, str]]) -> str:
-    response = None
-    try:
-        logger.info(f"Поиск ответа на вопрос: {question}")
-        found_question = False
-        for entry in context_memory:
-            if entry['role'] == 'user' and question.lower() in entry['content'].lower():
-                found_question = True
-                response_index = context_memory.index(entry) + 1
-                if response_index < len(context_memory) and context_memory[response_index]['role'] == 'assistant':
-                    response = context_memory[response_index]['content']
-                    logger.info("Ответ найден в контексте.")
-                    break
-
-        if not response:
-            logger.info("Ответ не найден в контексте.")
-    except Exception as e:
-        logger.error(f"Ошибка при поиске ответа в контексте: {e}")
-
-    return response

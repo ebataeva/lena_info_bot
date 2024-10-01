@@ -1,9 +1,7 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from handlers.handler import load_user_context, save_user_context
-import openai
 from handlers.logger import Logger
-from handlers.api_handler import get_openai_response, preprocess_prompt
 from classes.question_answer_base import QuestionAnswerBase
 import os
 
@@ -13,7 +11,6 @@ class ChatBot:
     def __init__(self, telegram_token: str, openai_key: str):
         self.telegram_token = telegram_token
         self.openai_key = openai_key
-        openai.api_key = self.openai_key
         self.application = Application.builder().token(self.telegram_token).build()
         self.qa_base = QuestionAnswerBase(openai_api_key = os.getenv('OPENAI_API_KEY'), word_file_path='documentation.docx')
 
@@ -23,11 +20,11 @@ class ChatBot:
 
     def start(self):
         logger.info("Запуск бота...")
-        
+
         self.application.add_handler(CommandHandler("start", self.handle_start))
         self.application.add_handler(CommandHandler("clear", self.handle_clear))
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_message))
-        
+
         # Запуск бота
         self.application.run_polling()
 
@@ -55,11 +52,12 @@ class ChatBot:
         except Exception as e:
             logger.error(f"Ошибка при очистке контекста: {e}")
 
-    async def handle_message(self, update, context):
+    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             user_message = update.message.text
             logger.info(f"Получено сообщение: '{user_message}' от пользователя {update.message.chat_id}")
-
+            if 'context_memory' not in context.user_data:
+                context.user_data['context_memory'] = []
             # Поиск ответа в Word-документе
             response = self.qa_base.search_in_word_document(user_message)
 
@@ -67,6 +65,22 @@ class ChatBot:
             if response:
                 logger.info(f"Найден ответ: '{response}'")
                 await update.message.reply_text(response)
+
+                # Update and save context
+                context.user_data['context_memory'].append({
+                    "role": "user",
+                    "content": user_message
+                })
+                context.user_data['context_memory'].append({
+                    "role": "assistant",
+                    "content": response
+                })
+
+                # Save the context to file
+                user_name = self.get_user_name(update)
+                chat_id = update.message.chat_id
+                save_user_context(user_name, chat_id, context.user_data['context_memory'])
+
             else:
                 # Если не удалось найти подходящий ответ
                 logger.info("Не удалось найти подходящий ответ в документации.")

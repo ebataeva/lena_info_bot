@@ -4,7 +4,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 import os
 from handlers.logger import Logger
-import openai
 
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
@@ -15,7 +14,6 @@ class QuestionAnswerBase:
         self.documentation_paragraphs = []
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
-        openai.api_key = openai_api_key
         self.load_data()  # Загружаем данные из Word-документа
 
     def load_data(self):
