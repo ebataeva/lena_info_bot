@@ -15,6 +15,7 @@ class QuestionAnswerBase:
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
+        #todo: вынести prompt в query_openai() в lamda выражение, чтобы не редактировать отдельно условия вопроса
 
     def load_data(self):
         """Загружает текст из Word-документа и подготавливает модель поиска."""
