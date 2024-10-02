@@ -5,3 +5,4 @@ __pycache__/*
 settings.py
 .vscode/
 *.pyc
+/contexts/*
