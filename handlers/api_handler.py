@@ -17,7 +17,7 @@ def send_to_openai(prompt, model="gpt-3.5-turbo"):
                 {"role": "system", "content": "You are an assistant knowledgeable in blockchain and cryptocurrency."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=550,
+            max_tokens=750,
             temperature=0.7,
         )
         
