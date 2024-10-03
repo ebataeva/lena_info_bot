@@ -46,7 +46,7 @@ def load_context_from_file(file_path: str) -> List[Dict[str, str]]:
 
         logger.info(
             f'Контекст успешно загружен. '
-            'Количество записей: {len(context_memory)}')
+            f'Количество записей: {len(context_memory)}')
     except Exception as e:
         logger.error(f'Ошибка при загрузке контекста из файла: {e}')
     return context_memory
