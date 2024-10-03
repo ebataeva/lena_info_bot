@@ -15,7 +15,6 @@ telegram==0.0.1
 tqdm==4.66.4
 typing_extensions==4.12.2
 python-dotenv
-colorlog
 colorama
 joblib==1.4.2 
 numpy==2.1.1 

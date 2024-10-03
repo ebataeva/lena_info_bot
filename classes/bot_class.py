@@ -5,6 +5,7 @@ from handlers.file_handler import clear_file
 from handlers.logger import Logger
 from classes.question_answer_base import QuestionAnswerBase
 import os
+import textwrap
 
 logger = Logger('ChatBotLogger').get_logger()
 
@@ -12,6 +13,14 @@ class ChatBot:
     def __init__(self, telegram_token: str, openai_key: str):
         self.telegram_token = telegram_token
         self.openai_key = openai_key
+        self.greeting = textwrap.dedent('''\
+            Привет, этот бот отвечает на вопросы о POSTHUMAN.
+            Ваши вопросы и ответы бота хранятся в отдельном файле
+            с вашим юзернеймом и ID чата — контексте.
+            Вы можете стереть его, воспользовавшись командой /clear,
+            и на сервере весь контекст сотрется, будет пустая история.
+        ''')
+        
         self.application = (
             Application.builder().token(self.telegram_token).build()
         )
@@ -57,7 +66,7 @@ class ChatBot:
             context.user_data['context_memory'] = (
                 load_user_context(user_name, chat_id)
             )
-            await update.message.reply_text('Привет! Начнем новый диалог.')
+            await update.message.reply_text(self.greeting)
         except Exception as e:
             logger.error(f'Ошибка в обработчике /start: {e}')
 
@@ -70,6 +79,7 @@ class ChatBot:
             chat_id = update.message.chat_id
             clear_file(self.file_path(user_name, chat_id))
             context.user_data['context_memory'] = []
+            logger.info('Контекст очищен')
             await update.message.reply_text('Контекст очищен.')
         except Exception as e:
             logger.error(f'Ошибка при очистке контекста: {e}')
