@@ -44,7 +44,7 @@ class QuestionAnswerBase:
                     self.documentation_text.split('\n')  # Разбиваем текст на абзацы
                 )
                 logger.info(f'Текст из Word-документа загружен: '
-                            '{len(self.documentation_paragraphs)} абзацев')
+                            f'{len(self.documentation_paragraphs)} абзацев')
 
                 # Создаем векторное представление абзацев и обучаем модель
                 if self.documentation_paragraphs:
