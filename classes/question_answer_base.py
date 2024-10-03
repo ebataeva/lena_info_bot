@@ -16,6 +16,11 @@ class QuestionAnswerBase:
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
         #todo: вынести prompt в query_openai() в lamda выражение, чтобы не редактировать отдельно условия вопроса
+        self.prompt = lambda intro, documentation_text, question, question_prompt : f'{intro}:\n{documentation_text}\n\nВопрос: {question}\n{question_prompt}'
+        self.map = {    
+            "intro": "Вот текст из документации:",
+            "question_prompt": "Пожалуйста, дайте наилучший ответ, основанный на этом тексте.",
+        }
 
     def load_data(self):
         """Загружает текст из Word-документа и подготавливает модель поиска."""
@@ -66,9 +71,13 @@ class QuestionAnswerBase:
             return None
 
     def query_openai(self, question):
-        """Запрашивает OpenAI с учетом документации."""
+        # Запрашивает OpenAI с учетом документации
         try:
-            prompt = f"Вот текст из документации:\n{self.documentation_text}\n\nВопрос: {question}\nПожалуйста, дайте наилучший ответ, основанный на этом тексте."
+            prompt = self.prompt(
+                self.map['intro'], 
+                self.documentation_text, 
+                question,
+                self.map['question_prompt'])
             return send_to_openai(prompt)
         except Exception as e:
             logger.error(f"Ошибка при запросе к OpenAI: {e}")

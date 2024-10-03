@@ -58,15 +58,12 @@ class ChatBot:
             logger.info(f"Получено сообщение: '{user_message}' от пользователя {update.message.chat_id}")
             if 'context_memory' not in context.user_data:
                 context.user_data['context_memory'] = []
-            # Поиск ответа в Word-документе
             response = self.qa_base.search_in_word_document(user_message)
-
-            # Если найден релевантный ответ
             if response:
                 logger.info(f"Найден ответ: '{response}'")
                 await update.message.reply_text(response)
 
-                # Update and save context
+                # Update and save the context
                 context.user_data['context_memory'].append({
                     "role": "user",
                     "content": user_message
@@ -82,7 +79,6 @@ class ChatBot:
                 save_user_context(user_name, chat_id, context.user_data['context_memory'])
 
             else:
-                # Если не удалось найти подходящий ответ
                 logger.info("Не удалось найти подходящий ответ в документации.")
                 await update.message.reply_text("Извините, я не могу найти ответ на ваш вопрос.")
 
