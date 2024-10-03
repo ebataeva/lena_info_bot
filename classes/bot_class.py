@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from handlers.handler import load_user_context, save_user_context
+from handlers.file_handler import clear_file
 from handlers.logger import Logger
 from classes.question_answer_base import QuestionAnswerBase
 import os
@@ -18,6 +19,7 @@ class ChatBot:
             openai_api_key = os.getenv('OPENAI_API_KEY'), 
             word_file_path='documentation.docx'
         )
+        self.file_path = lambda name, id: f'contexts/context_{name}_{id}.txt'
 
     def get_user_name(self, update: Update) -> str:
         return (
@@ -66,12 +68,7 @@ class ChatBot:
         try:
             user_name = self.get_user_name(update)
             chat_id = update.message.chat_id
-            file_path = f'contexts/context_{user_name}_{chat_id}.txt'
-
-            # Очистка контекста
-            with open(file_path, 'w', encoding='utf-8') as file:
-                file.write('')
-
+            clear_file(self.file_path(user_name, chat_id))
             context.user_data['context_memory'] = []
             await update.message.reply_text('Контекст очищен.')
         except Exception as e:

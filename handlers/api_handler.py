@@ -27,10 +27,11 @@ def send_to_openai(prompt, model="gpt-3.5-turbo"):
                 }
             ],
             max_tokens=750,
-            temperature=0.7,
+            temperature=0.8,
         )
         
         # Извлекаем и возвращаем текст ответа
+        logger.info('Ответ вернул OpenAI')
         return response['choices'][0]['message']['content'].strip()
     except Exception as e:
         logger.error(f'Ошибка при запросе к OpenAI: {e}')

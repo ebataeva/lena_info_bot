@@ -90,3 +90,7 @@ def save_context_to_file(
         logger.info(f'Контекст успешно сохранен в файл: {file_path}')
     except Exception as e:
         logger.error(f'Ошибка при записи в файл: {e}')
+
+def clear_file(file_path: str) -> None:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write('')
