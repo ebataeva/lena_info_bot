@@ -1,7 +1,5 @@
 import os
 from typing import List, Dict
-from telegram import Update
-from telegram.ext import ContextTypes
 from handlers.file_handler import load_context_from_file, save_context_to_file
 from handlers.logger import Logger
 
