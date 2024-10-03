@@ -90,8 +90,10 @@ class ChatBot:
     ) -> None:
         try:
             user_message = update.message.text
-            logger.info(f'Получено сообщение: "{user_message}" '
-                        f'от пользователя {self.get_user_name}')
+            logger.info(
+                f'Новое сообщение: "{user_message}" '
+                f'от пользоваателя {self.get_user_name(update)}'
+            )
             if 'context_memory' not in context.user_data:
                 context.user_data['context_memory'] = []
             response = self.qa_base.search_in_word_document(user_message)
