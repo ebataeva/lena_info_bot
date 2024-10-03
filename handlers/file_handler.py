@@ -46,7 +46,8 @@ def load_context_from_file(file_path: str) -> List[Dict[str, str]]:
 
         logger.info(
             f'Контекст успешно загружен. '
-            f'Количество записей: {len(context_memory)}')
+            f'Количество записей: {len(context_memory)}'
+        )
     except Exception as e:
         logger.error(f'Ошибка при загрузке контекста из файла: {e}')
     return context_memory
@@ -91,6 +92,10 @@ def save_context_to_file(
     except Exception as e:
         logger.error(f'Ошибка при записи в файл: {e}')
 
-def clear_file(file_path: str) -> None:
-            with open(file_path, 'w', encoding='utf-8') as file:
-                file.write('')
+def remove_context_file(file_path: str) -> None:
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info('Файл с контекстом удален')
+    except Exception as e:
+        logger.error(f'Ошибка при записи в файл: {e}')
