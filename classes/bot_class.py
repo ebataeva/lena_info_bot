@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from handlers.handler import load_user_context, save_user_context
-from handlers.file_handler import clear_file
+from handlers.file_handler import remove_context_file
 from handlers.logger import Logger
 from classes.question_answer_base import QuestionAnswerBase
 import os
@@ -77,7 +77,7 @@ class ChatBot:
         try:
             user_name = self.get_user_name(update)
             chat_id = update.message.chat_id
-            clear_file(self.file_path(user_name, chat_id))
+            remove_context_file(self.file_path(user_name, chat_id))
             context.user_data['context_memory'] = []
             logger.info('Контекст очищен')
             await update.message.reply_text('Контекст очищен.')
