@@ -1,7 +1,6 @@
 import os
 from typing import List, Dict
 from docx import Document
-
 from handlers.logger import Logger
 
 logger = Logger('FileHandlerLogger').get_logger()

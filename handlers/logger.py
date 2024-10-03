@@ -21,16 +21,10 @@ class ColoredFormatter(logging.Formatter):
         super().__init__(fmt)
 
     def format(self, record):
-        # Получаем базовый цвет логгера или белый по умолчанию
         log_color = LOG_COLORS.get(record.name, Fore.WHITE)
-
-        # Если уровень логирования - ERROR, устанавливаем красный цвет
         if record.levelno == logging.ERROR:
             log_color = Fore.RED
-
-        # Получаем имя вызываемого метода
         current_method = inspect.stack()[8].function
-
         # Форматируем сообщение с цветами и добавляем имя метода
         record.msg = f"{log_color}[{current_method}] {record.msg}{Style.RESET_ALL}"
         return super().format(record)
