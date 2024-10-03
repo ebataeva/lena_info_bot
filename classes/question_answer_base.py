@@ -24,11 +24,11 @@ class QuestionAnswerBase:
                 f'{question_prompt}'
             )
         )
-        self.map = {    
-            'intro': 'Вот текст из документации:',
+        self.prompt_map = {    
+            'intro': 'Вот программа POSTHUMAN:',
             'question_prompt': (
-                'Умоляю, дайте наилучший ответ, '
-                'основанный на этом тексте.',
+                'Пожалуйста! дайте наилучший ответ, '
+                'основанный на этой информации.',
             )
         }
 
@@ -97,10 +97,10 @@ class QuestionAnswerBase:
         # Запрашивает OpenAI с учетом документации
         try:
             prompt = self.prompt(
-                self.map['intro'], 
+                self.prompt_map['intro'], 
                 self.documentation_text, 
                 question,
-                self.map['question_prompt'])
+                self.prompt_map['question_prompt'])
             return send_to_openai(prompt)
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
