@@ -8,7 +8,7 @@ from handlers.logger import Logger
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
-    def __init__(self, openai_api_key, word_file_path='documentation.docx'):
+    def __init__(self, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
         self.word_file_path = word_file_path
         self.documentation_text = ""
         self.documentation_paragraphs = []

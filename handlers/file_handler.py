@@ -66,7 +66,7 @@ def save_context_to_file(
         context_memory = context_memory[-max_length:]
         
         # Сохраняем контекст в файл
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, 'a', encoding='utf-8') as file:
             for entry in context_memory:
                 if entry['role'] == 'user':
                     file.write(f'Вопрос: {entry["content"]}\n')

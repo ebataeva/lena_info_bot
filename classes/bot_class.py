@@ -10,9 +10,8 @@ import textwrap
 logger = Logger('ChatBotLogger').get_logger()
 
 class ChatBot:
-    def __init__(self, telegram_token: str, openai_key: str):
+    def __init__(self, telegram_token: str):
         self.telegram_token = telegram_token
-        self.openai_key = openai_key
         self.greeting = textwrap.dedent('''\
             Привет, этот бот отвечает на вопросы о POSTHUMAN.
             Ваши вопросы и ответы бота хранятся в отдельном файле
@@ -24,10 +23,7 @@ class ChatBot:
         self.application = (
             Application.builder().token(self.telegram_token).build()
         )
-        self.qa_base = QuestionAnswerBase(
-            openai_api_key = os.getenv('OPENAI_API_KEY'), 
-            word_file_path='documentation.docx'
-        )
+        self.qa_base = QuestionAnswerBase()
         self.file_path = lambda name, id: f'contexts/context_{name}_{id}.txt'
 
     def get_user_name(self, update: Update) -> str:
