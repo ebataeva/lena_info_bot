@@ -26,7 +26,7 @@ class ChatBot:
         )
         self.qa_base = QuestionAnswerBase(
             openai_api_key = os.getenv('OPENAI_API_KEY'), 
-            word_file_path='documentation.docx'
+            
         )
         self.file_path = lambda name, id: f'contexts/context_{name}_{id}.txt'
 
