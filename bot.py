@@ -11,15 +11,13 @@ load_dotenv()
 
 def main():
     TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
-    if not TELEGRAM_BOT_TOKEN or not OPENAI_API_KEY:
+    if not TELEGRAM_BOT_TOKEN:
         raise ValueError(
             'Не удалось загрузить TELEGRAM_BOT_TOKEN или OPENAI_API_KEY.'
         )
     
     # Создаем и запускаем экземпляр бота
-    chatbot = ChatBot(TELEGRAM_BOT_TOKEN, OPENAI_API_KEY)
+    chatbot = ChatBot(TELEGRAM_BOT_TOKEN)
     chatbot.start()
 
 if __name__ == '__main__':
