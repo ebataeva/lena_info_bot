@@ -1,4 +1,5 @@
 from handlers.file_handler import load_text_from_word
+from handlers.handler import load_user_context
 from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -8,30 +9,22 @@ from handlers.logger import Logger
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
-    def __init__(self, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
+    def __init__(self, context_memory, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
         self.word_file_path = word_file_path
         self.documentation_text = ""
         self.documentation_paragraphs = []
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
-        self.prompt = (
-            lambda intro, documentation_text, question, question_prompt : 
-            (
-                f'{intro}:\n'
-                f'{documentation_text}\n\n'
-                f'Вопрос: {question}\n'
-                f'{question_prompt}'
-            )
-        )
-        self.prompt_map = {    
-            'intro': 'Вот программа POSTHUMAN:',
-            'question_prompt': (
-                'Пожалуйста! дайте наилучший ответ, '
-                'основанный на этой информации.',
-            )
-        }
-
+        self.context_memory = context_memory
+        if context_memory is None or not isinstance(context_memory, list):
+            context_memory = []
+        if not any(message['role'] == 'system' for message in self.context_memory):
+            self.context_memory.insert(0, {
+                "role": "system",
+                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"
+            })
+        
     def load_data(self):
         # Загружает текст из Word-документа и подготавливает модель поиска.
         try:
@@ -88,20 +81,25 @@ class QuestionAnswerBase:
 
             # Если не нашли похожий абзац, используем OpenAI
             logger.info('Похожий абзац не найден, обращаемся к OpenAI.')
-            return self.query_openai(question)
+            return self.query_openai()
         except Exception as e:
             logger.error(f'Ошибка при поиске в документации: {e}')
             return None
 
-    def query_openai(self, question):
-        # Запрашивает OpenAI с учетом документации
+    def query_openai(self):
         try:
-            prompt = self.prompt(
-                self.prompt_map['intro'], 
-                self.documentation_text, 
-                question,
-                self.prompt_map['question_prompt'])
-            return send_to_openai(prompt)
+            # Валидация контекста
+            valid_context = [
+                message for message in self.context_memory
+                if message.get('content') and isinstance(message['content'], str)
+            ]
+
+            if not valid_context:
+                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
+
+            # Отправляем запрос в OpenAI
+            return send_to_openai(valid_context)
+
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
             return None
