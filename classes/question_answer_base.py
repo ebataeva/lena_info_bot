@@ -24,23 +24,7 @@ class QuestionAnswerBase:
                 "role": "system",
                 "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"
             })
-        self.prompt = (
-            lambda intro, documentation_text, question, question_prompt : 
-            (
-                f'{intro}:\n'
-                f'{documentation_text}\n\n'
-                f'Вопрос: {question}\n'
-                f'{question_prompt}'
-            )
-        )
-        self.prompt_map = {    
-            'intro': 'Вот программа POSTHUMAN:',
-            'question_prompt': (
-                'Пожалуйста! дайте наилучший ответ, '
-                'основанный на этой информации.',
-            )
-        }
-
+        
     def load_data(self):
         # Загружает текст из Word-документа и подготавливает модель поиска.
         try:
@@ -97,19 +81,13 @@ class QuestionAnswerBase:
 
             # Если не нашли похожий абзац, используем OpenAI
             logger.info('Похожий абзац не найден, обращаемся к OpenAI.')
-            return self.query_openai(question)
+            return self.query_openai()
         except Exception as e:
             logger.error(f'Ошибка при поиске в документации: {e}')
             return None
 
-    def query_openai(self, question):
+    def query_openai(self):
         try:
-            # Формируем запрос пользователя (без повторного добавления документации)
-            self.context_memory.append({
-                "role": "user",
-                "content": question
-            })
-
             # Валидация контекста
             valid_context = [
                 message for message in self.context_memory

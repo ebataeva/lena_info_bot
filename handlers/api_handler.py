@@ -15,7 +15,7 @@ def send_to_openai(context_memory, model="gpt-3.5-turbo"):
             model=model,
             messages=context_memory,  # Передаем весь контекст
             max_tokens=750,
-            temperature=0.8,
+            temperature=0.7,
         )
         
         # Извлекаем и возвращаем текст ответа
