@@ -4,7 +4,6 @@ from handlers.handler import load_user_context, save_user_context
 from handlers.file_handler import remove_context_file
 from handlers.logger import Logger
 from classes.question_answer_base import QuestionAnswerBase
-import os
 import textwrap
 
 logger = Logger('ChatBotLogger').get_logger()

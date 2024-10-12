@@ -1,5 +1,4 @@
 from handlers.file_handler import load_text_from_word
-from handlers.handler import load_user_context
 from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -78,7 +77,6 @@ class QuestionAnswerBase:
                     logger.info('Ответ слишком короткий, обращаемся к OpenAI.')
                     return self.query_openai(question)
                 return closest_paragraph
-
             # Если не нашли похожий абзац, используем OpenAI
             logger.info('Похожий абзац не найден, обращаемся к OpenAI.')
             return self.query_openai()
@@ -93,13 +91,9 @@ class QuestionAnswerBase:
                 message for message in self.context_memory
                 if message.get('content') and isinstance(message['content'], str)
             ]
-
             if not valid_context:
                 raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
-
-            # Отправляем запрос в OpenAI
             return send_to_openai(valid_context)
-
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
             return None
