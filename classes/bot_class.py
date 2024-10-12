@@ -23,7 +23,6 @@ class ChatBot:
         self.application = (
             Application.builder().token(self.telegram_token).build()
         )
-        self.qa_base = QuestionAnswerBase()
         self.file_path = lambda name, id: f'contexts/context_{name}_{id}.txt'
 
     def get_user_name(self, update: Update) -> str:
@@ -92,7 +91,8 @@ class ChatBot:
             )
             if 'context_memory' not in context.user_data:
                 context.user_data['context_memory'] = []
-            response = self.qa_base.search_in_word_document(user_message)
+            qa_base = QuestionAnswerBase(context.user_data['context_memory'])
+            response = qa_base.search_in_word_document(user_message)
             if response:
                 logger.info(f'Найден ответ: "{response}"')
                 await update.message.reply_text(response)

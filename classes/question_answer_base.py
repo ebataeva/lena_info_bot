@@ -1,4 +1,5 @@
 from handlers.file_handler import load_text_from_word
+from handlers.handler import load_user_context
 from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -8,13 +9,16 @@ from handlers.logger import Logger
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
-    def __init__(self, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
+    def __init__(self, context_memory, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
         self.word_file_path = word_file_path
         self.documentation_text = ""
         self.documentation_paragraphs = []
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
+        self.context_memory = context_memory
+        if context_memory is None or not isinstance(context_memory, list):
+            context_memory = []
         self.prompt = (
             lambda intro, documentation_text, question, question_prompt : 
             (
@@ -96,12 +100,36 @@ class QuestionAnswerBase:
     def query_openai(self, question):
         # Запрашивает OpenAI с учетом документации
         try:
+            # Формируем промпт
             prompt = self.prompt(
                 self.prompt_map['intro'], 
                 self.documentation_text, 
                 question,
-                self.prompt_map['question_prompt'])
-            return send_to_openai(prompt)
+                self.prompt_map['question_prompt']
+            )
+
+            # Добавляем промпт в контекст пользователя
+            self.context_memory.append({
+                "role": "user",
+                "content": prompt
+            })
+
+            # Валидация контекста (фильтрация только корректных сообщений)
+            valid_context = [
+                message for message in self.context_memory 
+                if message.get('content') and isinstance(message['content'], str)
+            ]
+
+            # Если контекст пуст, выбрасываем ошибку
+            if not valid_context:
+                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
+
+            # Отправляем запрос в OpenAI, используя валидированный контекст
+            return send_to_openai(valid_context)
+
         except Exception as e:
+            # Логируем ошибку и контекст для дебага
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
+            logger.error(f'Контекст на момент ошибки: {self.context_memory}')
             return None
+        

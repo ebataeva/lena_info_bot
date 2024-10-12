@@ -8,25 +8,12 @@ load_dotenv()
 logger = Logger('APIHandlerLogger').get_logger()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-
-def send_to_openai(prompt, model="gpt-3.5-turbo"):
+def send_to_openai(context_memory, model="gpt-3.5-turbo"):
     try:
-        # Используем chat-комплит endpoint
+        # Используем chat-комплит endpoint и передаем контекст
         response = openai.ChatCompletion.create(
             model=model,
-            messages=[
-                {
-                    'role': 'system', 
-                    'content': (
-                        'You are an assistant knowledgeable '
-                        'in blockchain and cryptocurrency.'
-                    )
-                },
-                {
-                    'role': 'user', 
-                    'content': prompt
-                }
-            ],
+            messages=context_memory,  # Передаем весь контекст
             max_tokens=750,
             temperature=0.8,
         )
@@ -37,6 +24,7 @@ def send_to_openai(prompt, model="gpt-3.5-turbo"):
     except Exception as e:
         logger.error(f'Ошибка при запросе к OpenAI: {e}')
         return None
+
     
 # # Предварительная обработка вопроса для добавления контекста НЕ ИСПОЛЬЗУЕТСЯ
 # def preprocess_prompt(prompt: str) -> str:
