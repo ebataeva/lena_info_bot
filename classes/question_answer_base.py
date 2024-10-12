@@ -19,6 +19,11 @@ class QuestionAnswerBase:
         self.context_memory = context_memory
         if context_memory is None or not isinstance(context_memory, list):
             context_memory = []
+        if not any(message['role'] == 'system' for message in self.context_memory):
+            self.context_memory.insert(0, {
+                "role": "system",
+                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"
+            })
         self.prompt = (
             lambda intro, documentation_text, question, question_prompt : 
             (
@@ -98,38 +103,25 @@ class QuestionAnswerBase:
             return None
 
     def query_openai(self, question):
-        # Запрашивает OpenAI с учетом документации
         try:
-            # Формируем промпт
-            prompt = self.prompt(
-                self.prompt_map['intro'], 
-                self.documentation_text, 
-                question,
-                self.prompt_map['question_prompt']
-            )
-
-            # Добавляем промпт в контекст пользователя
+            # Формируем запрос пользователя (без повторного добавления документации)
             self.context_memory.append({
                 "role": "user",
-                "content": prompt
+                "content": question
             })
 
-            # Валидация контекста (фильтрация только корректных сообщений)
+            # Валидация контекста
             valid_context = [
-                message for message in self.context_memory 
+                message for message in self.context_memory
                 if message.get('content') and isinstance(message['content'], str)
             ]
 
-            # Если контекст пуст, выбрасываем ошибку
             if not valid_context:
                 raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
 
-            # Отправляем запрос в OpenAI, используя валидированный контекст
+            # Отправляем запрос в OpenAI
             return send_to_openai(valid_context)
 
         except Exception as e:
-            # Логируем ошибку и контекст для дебага
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
-            logger.error(f'Контекст на момент ошибки: {self.context_memory}')
             return None
-        
