@@ -8,16 +8,21 @@ from handlers.logger import Logger
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
-    def __init__(self, context_memory, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
+    def __init__(self, user_context, word_file_path):
         self.word_file_path = word_file_path
         self.documentation_text = ""
         self.documentation_paragraphs = []
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
-        self.context_memory = context_memory
+        self.user_context = user_context
+        
+        context_memory = self.user_context.get_context()
         if context_memory is None or not isinstance(context_memory, list):
             context_memory = []
+
+        # Присваиваем self.context_memory
+        self.context_memory = context_memory
         if not any(message['role'] == 'system' for message in self.context_memory):
             self.context_memory.insert(0, {
                 "role": "system",
@@ -86,14 +91,23 @@ class QuestionAnswerBase:
 
     def query_openai(self):
         try:
+            context_memory = self.user_context.get_context()
+            logger.info(f'Тип context_memory: {type(context_memory)}')
+            logger.info(f'Контекст для OpenAI: {context_memory}')
+
             # Валидация контекста
             valid_context = [
-                message for message in self.context_memory
+                message for message in context_memory
                 if message.get('content') and isinstance(message['content'], str)
             ]
             if not valid_context:
-                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
-            return send_to_openai(valid_context)
+                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {context_memory}")
+            logger.info(f'Валидированный контекст для OpenAI: {valid_context}')
+
+            response = send_to_openai(valid_context)
+            logger.info(f'Ответ от OpenAI: {response}')
+            return response
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
             return None
+        
