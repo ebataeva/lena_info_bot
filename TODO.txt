@@ -1,0 +1,2 @@
+1. record all the contexts and collect the common qestions
+2. ask who user is and answer according their role (if developer answer like "what developer should know about this project")
