@@ -6,3 +6,4 @@ settings.py
 .vscode/
 *.pyc
 /contexts/*
+.env
