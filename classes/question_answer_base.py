@@ -1,5 +1,4 @@
 from handlers.file_handler import load_text_from_word
-from handlers.handler import load_user_context
 from handlers.api_handler import send_to_openai
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -9,20 +8,25 @@ from handlers.logger import Logger
 logger = Logger('QuestionAnswerBaseLogger').get_logger()
 
 class QuestionAnswerBase:
-    def __init__(self, context_memory, word_file_path='ОПИСАНИЕ ВАЛИДАТОРА POSTHUMAN.docx'):
+    def __init__(self, user_context, word_file_path):
         self.word_file_path = word_file_path
         self.documentation_text = ""
         self.documentation_paragraphs = []
         self.vectorizer = TfidfVectorizer()
         self.documentation_model = None
         self.load_data()  # Загружаем данные из Word-документа
-        self.context_memory = context_memory
+        self.user_context = user_context
+        
+        context_memory = self.user_context.get_context()
         if context_memory is None or not isinstance(context_memory, list):
             context_memory = []
+
+        # Присваиваем self.context_memory
+        self.context_memory = context_memory
         if not any(message['role'] == 'system' for message in self.context_memory):
             self.context_memory.insert(0, {
                 "role": "system",
-                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"
+                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"                
             })
         
     def load_data(self):
@@ -78,7 +82,6 @@ class QuestionAnswerBase:
                     logger.info('Ответ слишком короткий, обращаемся к OpenAI.')
                     return self.query_openai(question)
                 return closest_paragraph
-
             # Если не нашли похожий абзац, используем OpenAI
             logger.info('Похожий абзац не найден, обращаемся к OpenAI.')
             return self.query_openai()
@@ -88,18 +91,18 @@ class QuestionAnswerBase:
 
     def query_openai(self):
         try:
+            context_memory = self.user_context.get_context()
+            logger.info(f'Тип context_memory: {type(context_memory)}')
             # Валидация контекста
             valid_context = [
-                message for message in self.context_memory
+                message for message in context_memory
                 if message.get('content') and isinstance(message['content'], str)
             ]
-
             if not valid_context:
-                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {self.context_memory}")
-
-            # Отправляем запрос в OpenAI
-            return send_to_openai(valid_context)
-
+                raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {context_memory}")
+            response = send_to_openai(valid_context)
+            return response
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
             return None
+        

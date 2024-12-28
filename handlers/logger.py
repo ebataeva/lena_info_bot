@@ -12,6 +12,7 @@ LOG_COLORS = {
     'QuestionAnswerBaseLogger': Fore.YELLOW,
     'HandlerLogger': Fore.MAGENTA,
     'APIHandlerLogger': Fore.CYAN,
+    'UserContextLogger': Fore.MAGENTA,
     'MainLogger': Fore.WHITE  # Цвет по умолчанию
 }
 

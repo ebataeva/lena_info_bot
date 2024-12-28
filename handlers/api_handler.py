@@ -10,6 +10,9 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 def send_to_openai(context_memory, model="gpt-3.5-turbo"):
     try:
+        # Логируем переданный контекст
+        logger.info(f'Переданный контекст: {context_memory}')
+        
         # Используем chat-комплит endpoint и передаем контекст
         response = openai.ChatCompletion.create(
             model=model,
