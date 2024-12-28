@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import os
-from classes.bot_class import ChatBot
+from classes.chat_bot import ChatBot
 from handlers.logger import Logger
 
 # Создаем логгер для главного файла
