@@ -6,7 +6,7 @@ h11==0.14.0
 httpcore==1.0.5
 httpx==0.27.0
 idna==3.7
-openai==0.28.0
+openai==1.58.1
 pydantic==2.8.2
 pydantic_core==2.20.1
 python-telegram-bot==21.4

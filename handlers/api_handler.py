@@ -1,34 +1,29 @@
-import openai
+from openai import OpenAI
+
 import os
 from dotenv import load_dotenv
 from handlers.logger import Logger
-
-
 load_dotenv()
-logger = Logger('APIHandlerLogger').get_logger()
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
-def send_to_openai(context_memory, model="gpt-3.5-turbo"):
+logger = Logger('APIHandlerLogger').get_logger()
+
+def send_to_openai(context_memory, model="gpt-4-turbo"):
     try:
-        # Логируем переданный контекст
-        logger.info(f'Переданный контекст: {context_memory}')
-        
         # Используем chat-комплит endpoint и передаем контекст
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=context_memory,  # Передаем весь контекст
-            max_tokens=750,
-            temperature=0.7,
-        )
-        
+        response = client.chat.completions.create(model=model,
+        messages=context_memory,  # Передаем весь контекст
+        max_tokens=750,
+        temperature=0.5)
+
         # Извлекаем и возвращаем текст ответа
         logger.info('Ответ вернул OpenAI')
-        return response['choices'][0]['message']['content'].strip()
+        return response.choices[0].message.content.strip().replace("**", "")
     except Exception as e:
         logger.error(f'Ошибка при запросе к OpenAI: {e}')
         return None
 
-    
+
 # # Предварительная обработка вопроса для добавления контекста НЕ ИСПОЛЬЗУЕТСЯ
 # def preprocess_prompt(prompt: str) -> str:
 #     # Если ключевых слов нет, добавим общий контекст
@@ -46,7 +41,7 @@ def send_to_openai(context_memory, model="gpt-3.5-turbo"):
 #                 "not a physical wallet."
 #             )
 #         }
-        
+
 #         # Проверяем, что каждый элемент в контексте имеет правильный формат
 #         messages = [system_message]  # Начинаем с системного сообщения
 #         for entry in context_memory:
@@ -63,7 +58,7 @@ def send_to_openai(context_memory, model="gpt-3.5-turbo"):
 #             temperature=0.7,  # Контролируем креативность и разнообразие ответов
 #             top_p=0.9  # Используем вероятностное отсечение слов для генерации более естественных ответов
 #         )
-        
+
 #         return response['choices'][0]['message']['content'].strip()
 #     except Exception as e:
 #         logger.error(f"Ошибка при запросе к OpenAI: {e}")
