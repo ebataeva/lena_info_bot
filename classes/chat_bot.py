@@ -91,7 +91,7 @@ class ChatBot:
                 # Добавляем сообщение пользователя в контекст
                 user_context.update_context({
                     'role': 'user',
-                    'content': user_message
+                    'content': f'{user_message}, ответь только по программе POSTHUMAN или найди ответ в контексте блокчейна'
                 })
 
             # Создаем экземпляр QuestionAnswerBase, передавая user_context
@@ -114,7 +114,7 @@ class ChatBot:
                 user_context.save_context(n_messages=2)
             else:
                 logger.info('Не удалось найти верный ответ в документации.')
-                await update.message.reply_text(f'Извините, {user_name}, я не могу найти ответ на ваш вопрос.')
+                await update.message.reply_text(f'Извините, {user_name}, вам нужно стереть контекст командой /clear и задать вопрос повторно')
 
         except Exception as e:
             logger.error(f'Ошибка в обработчике сообщений: {e}')

@@ -66,7 +66,7 @@ class UserContext:
         if not any(message['role'] == 'system' for message in self.context_memory):
             system_message = {
                 'role': 'system',
-                'content': f"Вот программа POSTHUMAN:\n{self.documentation_text}"
+                'content': f"Программа POSTHUMAN:\n{self.documentation_text}"
             }
             self.context_memory.insert(0, system_message)
             logger.info('Добавлено системное сообщение в контекст.')

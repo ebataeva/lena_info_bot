@@ -73,9 +73,6 @@ def save_context_to_file(
                 elif entry['role'] == 'assistant':
                     file.write(f'Ответ: {entry["content"]}\n')
         
-        # Логирование для проверки содержимого
-        logger.info(f'Контент, записанный в файл: {context_memory}')
-
         # Проверка размера файла и удаление старых записей, если файл слишком большой
         if os.path.getsize(file_path) > max_file_size:
             logger.info(

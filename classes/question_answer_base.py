@@ -26,7 +26,7 @@ class QuestionAnswerBase:
         if not any(message['role'] == 'system' for message in self.context_memory):
             self.context_memory.insert(0, {
                 "role": "system",
-                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"
+                "content": f"Вот программа POSTHUMAN:\n{self.documentation_text}"                
             })
         
     def load_data(self):
@@ -93,8 +93,6 @@ class QuestionAnswerBase:
         try:
             context_memory = self.user_context.get_context()
             logger.info(f'Тип context_memory: {type(context_memory)}')
-            logger.info(f'Контекст для OpenAI: {context_memory}')
-
             # Валидация контекста
             valid_context = [
                 message for message in context_memory
@@ -102,10 +100,7 @@ class QuestionAnswerBase:
             ]
             if not valid_context:
                 raise ValueError(f"Контекст пуст или содержит некорректные значения. prompt = {context_memory}")
-            logger.info(f'Валидированный контекст для OpenAI: {valid_context}')
-
             response = send_to_openai(valid_context)
-            logger.info(f'Ответ от OpenAI: {response}')
             return response
         except Exception as e:
             logger.error(f'Ошибка при запросе к OpenAI: {e}')
